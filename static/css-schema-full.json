@@ -1,0 +1,401 @@
+{
+  "$schema": "https://example.com/css-schema-full-v1.json",
+  "meta": {
+    "name": "css-schema-full",
+    "version": "2025-08-20",
+    "description": "Comprehensive CSS properties schema with suggested UI controls and value types. Based on MDN and W3C property indices.",
+    "sources": [
+      "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference",
+      "https://www.w3.org/Style/CSS/all-properties.en.html"
+    ],
+    "notes": "This is a large, practical schema intended for building a CSS design UI. Keep MDN/W3C as canonical sources for updates."
+  },
+  "valueTypes": {
+    "color": {
+      "description": "color keywords, hex, rgb(), rgba(), hsl(), hsla(), lab(), lch(), color()",
+      "ui": "colorpicker",
+      "examples": ["#ff0000", "rgb(255,0,0)", "red", "hsl(120 60% 50%)", "transparent", "currentColor"]
+    },
+    "length": {
+      "description": "Length with unit",
+      "ui": "number+unit",
+      "units": ["px","em","rem","vw","vh","vmin","vmax","%","cm","mm","in","pt","pc","ch","ex"]
+    },
+    "percentage": {
+      "description": "Percentage value",
+      "ui": "number+unit",
+      "units": ["%"]
+    },
+    "number": {
+      "description": "Unitless number",
+      "ui": "number",
+      "examples": ["0","1","1.5","2"]
+    },
+    "integer": {
+      "description": "Integer",
+      "ui": "number",
+      "examples": ["0","1","2","3"]
+    },
+    "time": {
+      "description": "Time units",
+      "ui": "number+unit",
+      "units": ["s","ms"]
+    },
+    "angle": {
+      "description": "Angle units",
+      "ui": "number+unit",
+      "units": ["deg","rad","turn","grad"]
+    },
+    "url": {
+      "description": "URL or data URI",
+      "ui": "text",
+      "examples": ["https://example.com/img.png", "data:image/svg+xml;utf8,<svg...>"]
+    },
+    "enum": {
+      "description": "Enumerated keyword values",
+      "ui": "select",
+      "examples": []
+    },
+    "shadow": {
+      "description": "box-shadow / text-shadow syntax",
+      "ui": "shadow-builder",
+      "examples": ["0 2px 4px rgba(0,0,0,0.2)", "inset 0 2px 4px rgba(0,0,0,0.2)"]
+    },
+    "gradient": {
+      "description": "Gradient functions (linear-gradient, radial-gradient, conic-gradient)",
+      "ui": "gradient-builder",
+      "examples": ["linear-gradient(90deg, red 0%, blue 100%)"]
+    },
+    "transform-list": {
+      "description": "transform() function list (rotate, translate, scale, skew, matrix)",
+      "ui": "transform-builder",
+      "examples": ["rotate(10deg) translateX(10px) scale(1.2)"]
+    },
+    "timing-function": {
+      "description": "timing functions for transitions/animations",
+      "ui": "select-or-text",
+      "examples": ["ease","linear","ease-in","ease-out","ease-in-out","cubic-bezier(0.4,0,0.2,1)","steps(4,start)"]
+    },
+    "custom": {
+      "description": "Free text / CSS expression / complex shorthand",
+      "ui": "text",
+      "examples": []
+    },
+    "stroke": {
+      "description": "Stroke-like editor for width, style, and color (e.g. 3px solid rgba(0,0,0,0.3) or 'underline solid rgba(...)' for text-decoration). Use for border, outline, column-rule, text-decoration, and SVG stroke.",
+      "ui": "stroke-editor",
+      "examples": ["3px solid rgba(79,70,229,0.3)", "1.5px dashed rgba(0,0,0,0.5)", "underline solid rgba(79,70,229,0.3)"]
+    }
+  },
+  "properties": {
+    "accent-color": {
+      "type": ["color","enum","custom"],
+      "ui": "colorpicker",
+      "examples": ["auto","#c00","blue"]
+    },
+    "align-content": {
+      "type": ["enum"],
+      "ui": "select",
+      "values": ["stretch","center","flex-start","flex-end","space-between","space-around","space-evenly"]
+    },
+    "align-items": {
+      "type": ["enum"],
+      "ui": "select",
+      "values": ["stretch","flex-start","flex-end","center","baseline"]
+    },
+    "align-self": {
+      "type": ["enum"],
+      "ui": "select",
+      "values": ["auto","flex-start","flex-end","center","baseline","stretch"]
+    },
+    "all": {
+      "type": ["enum"],
+      "ui": "select",
+      "values": ["initial","inherit","unset","revert"]
+    },
+    "animation": { "type":["custom"], "ui":"animation-builder", "examples":["fade 1s ease-in 0s 1 normal both"] },
+    "animation-name": { "type":["custom"], "ui":"text" },
+    "animation-duration": { "type":["time"], "ui":"number+unit", "units":["s","ms"] },
+    "animation-timing-function": { "type":["timing-function"], "ui":"select-or-text" },
+    "animation-delay": { "type":["time"], "ui":"number+unit" },
+    "animation-iteration-count": { "type":["number","enum"], "ui":"number", "values":["infinite"] },
+    "animation-direction": { "type":["enum"], "ui":"select", "values":["normal","reverse","alternate","alternate-reverse"] },
+    "animation-fill-mode": { "type":["enum"], "ui":"select", "values":["none","forwards","backwards","both"] },
+    "animation-play-state": { "type":["enum"], "ui":"select", "values":["running","paused"] },
+
+    "appearance": { "type":["enum"], "ui":"select", "values":["auto","none","menulist-button","textfield","searchfield","button","checkbox","radio"] },
+    "backdrop-filter": { "type":["custom"], "ui":"filter-builder", "examples":["blur(4px) brightness(.8)"] },
+    "background": { "type":["custom","gradient","url"], "ui":"background-builder", "examples":["linear-gradient(#fff,#eee)","url('img.png') no-repeat center/cover"] },
+    "background-color": { "type":["color"], "ui":"colorpicker" },
+    "background-image": { "type":["url","gradient"], "ui":"image-or-gradient" },
+    "background-position": { "type":["length","percentage","enum"], "ui":"position-picker", "examples":["center","10% 20%","top left"] },
+    "background-size": { "type":["enum","length","percentage"], "ui":"select-or-number+unit", "values":["auto","cover","contain"] },
+    "background-repeat": { "type":["enum"], "ui":"select", "values":["repeat","no-repeat","repeat-x","repeat-y","space","round"] },
+    "background-attachment": { "type":["enum"], "ui":"select", "values":["scroll","fixed","local"] },
+    "background-clip": { "type":["enum"], "ui":"select", "values":["border-box","padding-box","content-box","text"] },
+    "background-origin": { "type":["enum"], "ui":"select", "values":["padding-box","border-box","content-box"] },
+
+    "block-size": { "type":["length","percentage","auto"], "ui":"number+unit", "notes":"logical property for height in block direction" },
+    "inline-size": { "type":["length","percentage","auto"], "ui":"number+unit", "notes":"logical property for width in inline direction" },
+
+    "border": { "type":["stroke"], "ui":"stroke-editor", "examples":["1px solid #000"] },
+    "border-width": { "type":["length"], "ui":"number+unit", "examples":["1px","0"] },
+    "border-style": { "type":["enum"], "ui":"select", "values":["none","hidden","dotted","dashed","solid","double","groove","ridge","inset","outset"] },
+    "border-color": { "type":["color"], "ui":"colorpicker" },
+    "border-top": { "type":["stroke"], "ui":"stroke-editor" },
+    "border-right": { "type":["stroke"], "ui":"stroke-editor" },
+    "border-bottom": { "type":["stroke"], "ui":"stroke-editor" },
+    "border-left": { "type":["stroke"], "ui":"stroke-editor" },
+    "border-radius": { "type":["length","percentage"], "ui":"number+unit-or-multi", "examples":["4px","50%","4px 8px 4px 8px"] },
+    "border-image": { "type":["custom"], "ui":"text", "examples":["url(border.png) 30 30 round"] },
+    "box-shadow": { "type":["shadow"], "ui":"shadow-builder" },
+
+    "bottom": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "box-sizing": { "type":["enum"], "ui":"select", "values":["content-box","border-box"] },
+
+    "caption-side": { "type":["enum"], "ui":"select", "values":["top","bottom","block-start","block-end"] },
+    "caret-color": { "type":["color","enum"], "ui":"colorpicker", "values":["auto"] },
+
+    "clear": { "type":["enum"], "ui":"select", "values":["none","left","right","both","inline-start","inline-end"] },
+
+    "clip": { "type":["custom"], "ui":"text", "notes":"deprecated in favor of clip-path" },
+    "clip-path": { "type":["custom"], "ui":"clip-path-builder", "examples":["circle(50% at 50% 50%)","inset(10% 10% 10% 10%)"] },
+
+    "color": { "type":["color"], "ui":"colorpicker" },
+
+    "column-count": { "type":["integer","auto"], "ui":"number" },
+    "column-gap": { "type":["length","percentage"], "ui":"number+unit" },
+    "column-rule": { "type":["stroke"], "ui":"stroke-editor" },
+    "column-rule-width": { "type":["length"], "ui":"number+unit" },
+
+    "content": { "type":["custom"], "ui":"text", "notes":"for ::before and ::after" },
+
+    "counter-reset": { "type":["custom"], "ui":"text" },
+    "counter-increment": { "type":["custom"], "ui":"text" },
+
+    "cursor": { "type":["enum"], "ui":"select", "values":["auto","default","pointer","crosshair","text","move","wait","help","not-allowed","grab","grabbing","progress"] },
+
+    "direction": { "type":["enum"], "ui":"select", "values":["ltr","rtl","inherit"] },
+
+    "display": { "type":["enum"], "ui":"select", "values":["block","inline","inline-block","flex","inline-flex","grid","inline-grid","none","contents","table","table-row","table-cell","flow-root"] },
+
+    "empty-cells": { "type":["enum"], "ui":"select", "values":["show","hide"] },
+
+    "filter": { "type":["custom"], "ui":"filter-builder", "examples":["blur(4px)","grayscale(1)","contrast(120%)"] },
+
+    "flex": { "type":["custom"], "ui":"flex-builder", "examples":["1","0 1 auto","2 1 0%"] },
+    "flex-basis": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "flex-direction": { "type":["enum"], "ui":"select", "values":["row","row-reverse","column","column-reverse"] },
+    "flex-flow": { "type":["custom"], "ui":"text" },
+    "flex-grow": { "type":["number"], "ui":"number" },
+    "flex-shrink": { "type":["number"], "ui":"number" },
+    "flex-wrap": { "type":["enum"], "ui":"select", "values":["nowrap","wrap","wrap-reverse"] },
+
+    "float": { "type":["enum"], "ui":"select", "values":["left","right","none","inline-start","inline-end"] },
+
+    "font": { "type":["custom"], "ui":"font-shorthand-builder", "examples":["italic small-caps bold 16px/1.5 \"Helvetica\", sans-serif"] },
+    "font-family": { "type":["custom"], "ui":"font-picker", "examples":["'Inter', system-ui, sans-serif","Georgia, serif"] },
+    "font-feature-settings": { "type":["custom"], "ui":"text" },
+    "font-kerning": { "type":["enum"], "ui":"select", "values":["auto","normal","none"] },
+    "font-size": { "type":["length","percentage","keyword"], "ui":"number+unit", "examples":["16px","1rem","larger"] },
+    "font-stretch": { "type":["enum"], "ui":"select", "values":["ultra-condensed","extra-condensed","condensed","semi-condensed","normal","semi-expanded","expanded","extra-expanded","ultra-expanded"] },
+    "font-style": { "type":["enum"], "ui":"select", "values":["normal","italic","oblique"] },
+    "font-variant": { "type":["custom"], "ui":"text" },
+    "font-weight": { "type":["enum","number"], "ui":"select", "values":["normal","bold","bolder","lighter","100","200","300","400","500","600","700","800","900"] },
+
+    "gap": { "type":["length","percentage"], "ui":"number+unit" },
+    "grid": { "type":["custom"], "ui":"grid-template-builder", "examples":["grid-template: 'a b' 'c d' / 1fr 2fr"] },
+    "grid-area": { "type":["custom"], "ui":"text" },
+    "grid-auto-columns": { "type":["custom"], "ui":"text" },
+    "grid-auto-rows": { "type":["custom"], "ui":"text" },
+    "grid-column": { "type":["custom"], "ui":"text", "examples":["1 / 3","span 2"] },
+    "grid-column-end": { "type":["custom"], "ui":"text" },
+    "grid-column-gap": { "type":["length","percentage"], "ui":"number+unit" },
+    "grid-column-start": { "type":["custom"], "ui":"text" },
+    "grid-row": { "type":["custom"], "ui":"text" },
+    "grid-row-start": { "type":["custom"], "ui":"text" },
+    "grid-row-end": { "type":["custom"], "ui":"text" },
+    "grid-row-gap": { "type":["length","percentage"], "ui":"number+unit" },
+    "grid-template-columns": { "type":["custom"], "ui":"grid-template-builder", "examples":["1fr 1fr","repeat(3,1fr)","100px 2fr"] },
+    "grid-template-rows": { "type":["custom"], "ui":"grid-template-builder" },
+
+    "height": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "hyphens": { "type":["enum"], "ui":"select", "values":["none","manual","auto"] },
+
+    "image-rendering": { "type":["enum"], "ui":"select", "values":["auto","crisp-edges","pixelated","smooth"] },
+
+    "inset": { "type":["length","percentage","auto"], "ui":"box-input", "notes":"shorthand for top/right/bottom/left (logical: inset-block/inline available)" },
+    "inset-block": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "inset-inline": { "type":["length","percentage","auto"], "ui":"number+unit" },
+
+    "isolation": { "type":["enum"], "ui":"select", "values":["auto","isolate"] },
+
+    "justify-content": { "type":["enum"], "ui":"select", "values":["flex-start","flex-end","center","space-between","space-around","space-evenly"] },
+    "justify-items": { "type":["enum"], "ui":"select", "values":["start","end","center","stretch"] },
+    "justify-self": { "type":["enum"], "ui":"select", "values":["auto","start","end","center","stretch"] },
+
+    "left": { "type":["length","percentage","auto"], "ui":"number+unit" },
+
+    "letter-spacing": { "type":["length","normal"], "ui":"number+unit" },
+    "line-height": { "type":["number","length","percentage","normal"], "ui":"number+unit" },
+
+    "list-style": { "type":["custom"], "ui":"list-style-builder", "examples":["disc inside url('img.png')"] },
+    "list-style-type": { "type":["enum"], "ui":"select", "values":["disc","circle","square","decimal","lower-roman","upper-roman","lower-alpha","upper-alpha","none"] },
+
+    "margin": { "type":["length","percentage","auto"], "ui":"box-input" },
+    "margin-block": { "type":["length","percentage","auto"], "ui":"box-input" },
+    "margin-inline": { "type":["length","percentage","auto"], "ui":"box-input" },
+    "margin-top": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "margin-right": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "margin-bottom": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "margin-left": { "type":["length","percentage","auto"], "ui":"number+unit" },
+
+    "mask": { "type":["custom","url"], "ui":"mask-builder" },
+    "mask-image": { "type":["url","gradient"], "ui":"image-or-gradient" },
+
+    "max-block-size": { "type":["length","percentage","none"], "ui":"number+unit" },
+    "max-height": { "type":["length","percentage","none"], "ui":"number+unit" },
+    "max-inline-size": { "type":["length","percentage","none"], "ui":"number+unit" },
+    "max-width": { "type":["length","percentage","none"], "ui":"number+unit" },
+
+    "min-block-size": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "min-height": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "min-inline-size": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "min-width": { "type":["length","percentage","auto"], "ui":"number+unit" },
+
+    "mix-blend-mode": { "type":["enum"], "ui":"select", "values":["normal","multiply","screen","overlay","darken","lighten","color-dodge","color-burn","hard-light","soft-light","difference","exclusion","hue","saturation","color","luminosity"] },
+
+    "object-fit": { "type":["enum"], "ui":"select", "values":["fill","contain","cover","none","scale-down"] },
+    "object-position": { "type":["position","percentage","length"], "ui":"position-picker" },
+
+    "offset": { "type":["custom"], "ui":"text", "notes":"offset-path/offset-distance shorthand not implemented here" },
+
+    "opacity": { "type":["number"], "ui":"slider", "min":0, "max":1, "step":0.01 },
+    "order": { "type":["integer"], "ui":"number" },
+    "orphans": { "type":["integer"], "ui":"number" },
+
+    "outline": { "type":["stroke"], "ui":"stroke-editor", "examples":["1px solid red"] },
+    "outline-color": { "type":["color"], "ui":"colorpicker" },
+    "outline-style": { "type":["enum"], "ui":"select", "values":["auto","none","dotted","dashed","solid","double","groove","ridge","inset","outset"] },
+    "outline-width": { "type":["length"], "ui":"number+unit" },
+
+    "overflow": { "type":["enum"], "ui":"select", "values":["visible","hidden","scroll","auto","clip"] },
+    "overflow-x": { "type":["enum"], "ui":"select", "values":["visible","hidden","scroll","auto","clip"] },
+    "overflow-y": { "type":["enum"], "ui":"select", "values":["visible","hidden","scroll","auto","clip"] },
+
+    "overscroll-behavior": { "type":["enum"], "ui":"select", "values":["auto","contain","none"] },
+
+    "padding": { "type":["length","percentage"], "ui":"box-input" },
+    "padding-block": { "type":["length","percentage"], "ui":"box-input" },
+    "padding-inline": { "type":["length","percentage"], "ui":"box-input" },
+    "padding-top": { "type":["length","percentage"], "ui":"number+unit" },
+    "padding-right": { "type":["length","percentage"], "ui":"number+unit" },
+    "padding-bottom": { "type":["length","percentage"], "ui":"number+unit" },
+    "padding-left": { "type":["length","percentage"], "ui":"number+unit" },
+
+    "page-break-after": { "type":["enum"], "ui":"select", "values":["auto","always","avoid","left","right"] },
+
+    "perspective": { "type":["length","none"], "ui":"number+unit" },
+    "perspective-origin": { "type":["percentage","length","enum"], "ui":"position-picker", "examples":["50% 50%","left top"] },
+
+    "place-content": { "type":["custom"], "ui":"text" },
+    "place-items": { "type":["custom"], "ui":"text" },
+
+    "pointer-events": { "type":["enum"], "ui":"select", "values":["auto","none","visiblePainted","visibleFill","visibleStroke","visible","painted","fill","stroke","all"] },
+
+    "position": { "type":["enum"], "ui":"select", "values":["static","relative","absolute","fixed","sticky"] },
+
+    "quotes": { "type":["custom"], "ui":"text", "examples":["\"«\" \"»\" \"‹\" \"›\""] },
+
+    "resize": { "type":["enum"], "ui":"select", "values":["none","both","horizontal","vertical"] },
+
+    "right": { "type":["length","percentage","auto"], "ui":"number+unit" },
+
+    "scroll-behavior": { "type":["enum"], "ui":"select", "values":["auto","smooth"] },
+    "scroll-snap-align": { "type":["enum"], "ui":"select", "values":["start","end","center","none"] },
+    "scroll-snap-type": { "type":["enum"], "ui":"select", "values":["none","x","y","block","inline","both","mandatory","proximity"] },
+
+    "shape-outside": { "type":["custom"], "ui":"text", "examples":["circle(50% at 50% 50%)"] },
+
+    "tab-size": { "type":["integer"], "ui":"number" },
+    "table-layout": { "type":["enum"], "ui":"select", "values":["auto","fixed"] },
+
+    "text-align": { "type":["enum"], "ui":"select", "values":["left","right","center","justify","start","end"] },
+    "text-align-last": { "type":["enum"], "ui":"select", "values":["auto","left","right","center","justify"] },
+    "text-decoration": { "type":["stroke"], "ui":"stroke-editor", "examples":["underline solid rgba(79,70,229,0.3)"] },
+    "text-decoration-color": { "type":["color"], "ui":"colorpicker" },
+    "text-decoration-line": { "type":["enum"], "ui":"select", "values":["none","underline","overline","line-through","blink"] },
+    "text-decoration-style": { "type":["enum"], "ui":"select", "values":["solid","double","dotted","dashed","wavy"] },
+    "text-indent": { "type":["length","percentage"], "ui":"number+unit" },
+    "text-justify": { "type":["enum"], "ui":"select", "values":["auto","inter-word","inter-character","none"] },
+    "text-overflow": { "type":["enum","custom"], "ui":"select", "values":["clip","ellipsis"] },
+    "text-rendering": { "type":["enum"], "ui":"select", "values":["auto","optimizeSpeed","optimizeLegibility","geometricPrecision"] },
+    "text-shadow": { "type":["shadow"], "ui":"shadow-builder" },
+    "text-transform": { "type":["enum"], "ui":"select", "values":["none","capitalize","uppercase","lowercase","full-width"] },
+    "top": { "type":["length","percentage","auto"], "ui":"number+unit" },
+
+    "touch-action": { "type":["enum","custom"], "ui":"select-or-text", "values":["auto","none","pan-x","pan-y","manipulation"] },
+
+    "transform": { "type":["transform-list"], "ui":"transform-builder" },
+    "transform-origin": { "type":["percentage","length","enum"], "ui":"position-picker", "examples":["50% 50%","center"] },
+    "transform-style": { "type":["enum"], "ui":"select", "values":["flat","preserve-3d"] },
+    "transition": { "type":["custom"], "ui":"transition-builder", "examples":["all 0.3s ease"] },
+    "transition-property": { "type":["custom"], "ui":"text" },
+    "transition-duration": { "type":["time"], "ui":"number+unit" },
+    "transition-timing-function": { "type":["timing-function"], "ui":"select-or-text" },
+    "transition-delay": { "type":["time"], "ui":"number+unit" },
+
+    "unicode-bidi": { "type":["enum"], "ui":"select", "values":["normal","embed","isolate","bidi-override","isolate-override","plaintext"] },
+    "user-select": { "type":["enum"], "ui":"select", "values":["auto","text","none","contain"] },
+
+    "vertical-align": { "type":["length","percentage","enum"], "ui":"select-or-number+unit", "values":["baseline","sub","super","text-top","text-bottom","middle","top","bottom"] },
+
+    "visibility": { "type":["enum"], "ui":"select", "values":["visible","hidden","collapse"] },
+
+    "white-space": { "type":["enum"], "ui":"select", "values":["normal","nowrap","pre","pre-line","pre-wrap"] },
+    "widows": { "type":["integer"], "ui":"number" },
+    "width": { "type":["length","percentage","auto"], "ui":"number+unit" },
+    "word-break": { "type":["enum"], "ui":"select", "values":["normal","break-all","keep-all","break-word"] },
+    "word-spacing": { "type":["length","normal"], "ui":"number+unit" },
+    "writing-mode": { "type":["enum"], "ui":"select", "values":["horizontal-tb","vertical-rl","vertical-lr","sideways-rl","sideways-lr"] },
+
+    "will-change": { "type":["custom"], "ui":"text", "notes":"hint to browsers; values: auto, transform, opacity, scroll-position, etc." },
+
+    "zoom": { "type":["number","percentage"], "ui":"number+unit", "notes":"non-standard; use transform/scale when possible" },
+
+    "fill": { "type":["color","url"], "ui":"colorpicker", "notes":"SVG property (fill color)" },
+    "stroke": { "type":["stroke","color"], "ui":"stroke-editor", "notes":"SVG stroke (use stroke-editor for width/style/color)" },
+    "stroke-width": { "type":["length","number"], "ui":"number+unit" },
+
+    "scrollbar-color": { "type":["color","enum"], "ui":"colorpicker", "values":["auto"] },
+    "scrollbar-width": { "type":["enum"], "ui":"select", "values":["auto","thin","none"] },
+
+    "custom-property": {
+      "type": ["custom"],
+      "ui": "text",
+      "pattern": "^--[a-z0-9\\-]+$",
+      "notes": "CSS custom properties (variables). Value is free-form."
+    }
+  },
+  "shorthands": {
+    "margin": ["margin-top","margin-right","margin-bottom","margin-left"],
+    "padding": ["padding-top","padding-right","padding-bottom","padding-left"],
+    "border": ["border-width","border-style","border-color"],
+    "background": ["background-image","background-position","background-size","background-repeat","background-origin","background-clip","background-color","background-attachment"],
+    "font": ["font-style","font-variant","font-weight","font-stretch","font-size","line-height","font-family"],
+    "animation": ["animation-name","animation-duration","animation-timing-function","animation-delay","animation-iteration-count","animation-direction","animation-fill-mode","animation-play-state"],
+    "transition": ["transition-property","transition-duration","transition-timing-function","transition-delay"]
+  },
+  "uiHints": {
+    "colorpicker": "Use an input[type=color] plus a text input for advanced color strings",
+    "number+unit": "Provide a number input and a unit select (units from valueTypes.length.units)",
+    "select": "Dropdown with allowed values",
+    "slider": "Range input with numeric display",
+    "box-input": "4 inputs (top,right,bottom,left)",
+    "shadow-builder": "Structured editor for offset-x, offset-y, blur, spread, color, and inset",
+    "gradient-builder": "Structured editor for gradient type, angle, color-stops",
+    "transform-builder": "Add transform functions with parameters",
+    "font-picker": "Dropdown with common fonts + free-text",
+    "stroke-editor": "Structured editor for stroke-like properties: width, style, and color. Use for border, outline, column-rule, text-decoration, and SVG stroke."
+  }
+}

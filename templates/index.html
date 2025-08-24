@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>HTML Creator & Editor</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <header class="site-header">
+  <div class="container header-row">
+    <div class="site-title">
+      <a href="/" style="color:inherit;text-decoration:none;">
+        Sobhan KD — HTML Creator Project
+      </a>
+    </div>
+    <nav class="site-nav">
+      <a href="https://github.com/KouchakiDev" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+      <a href="https://www.linkedin.com/in/kouchaki-dev/" target="_blank" rel="noopener" class="nav-link">LinkedIn</a>
+    </nav>
+  </div>
+</header>
+
+
+  <main>
+    <div class="container">
+
+      <!-- TOP ROW: sidebar + create -->
+      <div class="top-row">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+          <div class="sidebar-header">
+            <h2>Projects</h2>
+            <button id="refresh-projects" class="btn small">Refresh</button>
+          </div>
+
+          <div id="projects-list" class="projects-list">
+            <!-- JS will populate -->
+          </div>
+
+          <div class="sidebar-footer">
+            <small class="muted">Project manager — local</small>
+          </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main-area">
+          <section class="card create-card">
+            <h3>Create Project</h3>
+
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="flash">
+                  {% for message in messages %}
+                    <div>{{ message }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
+            <form id="create-form" action="{{ url_for('create_project') }}" method="POST">
+              <label for="project_name">Project name</label>
+              <input type="text" id="project_name" name="project_name" placeholder="e.g. myproject" required />
+
+              <div class="checkbox-row">
+                <label><input type="checkbox" name="add_css" /> Add CSS</label>
+                <label><input type="checkbox" name="add_js" /> Add JS</label>
+              </div>
+
+              <div style="display:flex; gap:12px;">
+                <button type="submit" class="btn primary">Create Project</button>
+              </div>
+            </form>
+          </section>
+        </main>
+      </div>
+
+      <!-- BOTTOM ROW: how it works (same width as top-row) -->
+      <div class="bottom-row">
+  <section class="card help-card" aria-labelledby="how-it-works-title" dir="ltr">
+    <h4 id="how-it-works-title">How it works</h4>
+
+    <ol>
+      <li>
+        <strong>Create a project</strong> — Start a new project and optionally include <code>CSS</code> or <code>JS</code>.
+      </li>
+
+      <li>
+        <strong>Open a project</strong> — Pick a project from the left sidebar and choose one of the modes:
+        <ul>
+          <li><strong>Preview</strong> — centered, read-only modal for quick viewing.</li>
+          <li><strong>Load</strong> — full-screen, editable workspace for making changes.</li>
+        </ul>
+      </li>
+
+      <li>
+        <strong>Edit & Save</strong> — In <strong>Load</strong> you can edit the DOM, change attributes and text, then use <code>Save</code> to write changes back to <code>index.html</code>.
+      </li>
+
+      <li>
+        <strong>Upload assets</strong> — Use the Upload tool in the properties panel to replace <em>src</em> values (images, video, etc.); the selected file path will be inserted automatically.
+      </li>
+
+      <li>
+        <strong>Backup tip</strong> — Before major edits, export or copy the original file so you can revert if needed.
+      </li>
+    </ol>
+
+    <p class="muted" style="margin-top:8px;">
+      Summary: <strong>Preview</strong> for quick checks; <strong>Load</strong> for editing and finalizing.
+    </p>
+  </section>
+</div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <small>
+      © <span id="y"></span> Sobhan Kouchaki Developer
+      · <a href="https://github.com/KouchakiDev">GitHub</a> ·
+      <a href="https://www.linkedin.com/in/kouchaki-dev/">LinkedIn</a>
+    </small>
+  </footer>
+  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+
+
+  <!-- PREVIEW / EDITOR MODAL (single component—mode toggled by JS) -->
+  <div id="preview-modal" class="modal-hidden" aria-hidden="true">
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="preview-card" id="preview-card" role="dialog" aria-modal="true" aria-labelledby="proj-title">
+
+        <!-- TOOLBAR: structured as three areas (left / center / right) -->
+        <div class="toolbar" role="toolbar" aria-label="Editor toolbar">
+          <div class="toolbar-left">
+            <div class="editor-tabs" role="tablist" aria-label="Editor tabs" style="display:flex; align-items:center; gap:8px;">
+              <button id="tab-html" class="tab active" role="tab" aria-selected="true">HTML</button>
+              <button id="tab-style" class="tab" role="tab" aria-selected="false">Style</button>
+            </div>
+
+            <div class="device-toggle" style="display:flex; gap:8px; align-items:center; margin-left:12px;">
+              <button id="device-btn-desktop" class="device-btn active" data-w="1366" data-h="768" title="Desktop">Desktop 🖥️</button>
+              <button id="device-btn-mobile"  class="device-btn" data-w="375" data-h="812" title="Mobile">Mobile 📱</button>
+            </div>
+          </div>
+
+          <!-- Center: project title + editable (centered) -->
+          <div class="title-group" role="group" aria-label="Project title">
+            <label id="proj-title" for="title-textbox">Preview</label>
+            <input id="title-textbox" type="text" aria-label="Project name" placeholder="project name" />
+          </div>
+
+          <div class="toolbar-right">
+            <input id="new-tag-type" list="tags-datalist" placeholder="<div>" style="min-width:120px; padding:6px 8px; border-radius:8px; border:1px solid #e6e9f2;" />
+            <datalist id="tags-datalist"></datalist>
+
+            <button id="add-element" class="btn small">Add</button>
+            <button id="save-html" class="btn small primary">Save</button>
+            <button id="close-modal" class="btn small muted">Close</button>
+          </div>
+        </div>
+
+        <!-- LEFT: DOM tree -->
+        <div class="panel dom-panel" id="dom-tree" aria-label="DOM tree">
+          <!-- tree nodes injected by JS -->
+        </div>
+
+        <!-- CENTER: iframe preview -->
+        <div id="iframe-frame-wrapper" class="iframe-panel">
+          <iframe id="project-iframe" title="project preview" src="/projects/yourproject/index.html"></iframe>
+        </div>
+
+        <!-- REPLACED CSS PANEL (selector picker, token manager, inspector, preview, full editor) -->
+        <div class="panel css-panel" id="css-panel" style="display:none;">
+          <h4>Stylesheet</h4>
+
+          <!-- Selector picker: tabs + searchable lists -->
+          <div class="selector-picker">
+            <div class="selector-picker-header" style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+              <div class="selector-tabs" role="tablist" aria-label="Selector types">
+                <button class="sel-tab active" data-type="classes">Classes</button>
+                <button class="sel-tab" data-type="ids">IDs</button>
+                <button class="sel-tab" data-type="tags">Tags</button>
+              </div>
+              <input id="selector-search" type="search" placeholder="Search selectors..." style="flex:1; padding:6px 8px; border-radius:6px; border:1px solid #e6e9f2;" />
+              <button id="refresh-selectors" class="btn small">Refresh</button>
+              <button id="open-token-manager" class="btn small muted">Tokens</button>
+            </div>
+
+            <div id="selector-list-wrap" style="margin-top:8px; display:flex; gap:8px;">
+              <div id="selector-list" style="width:100%; max-height:220px; overflow:auto; border:1px solid #eef2ff; padding:8px; border-radius:6px;">
+                <!-- JS will populate: list items with count badges -->
+                <div class="muted">Select a tab to view selectors</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Token manager (collapsible) -->
+          <div id="token-manager" style="margin-top:10px; display:none; border:1px dashed #e6eefc; padding:10px; border-radius:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>Design tokens (CSS variables)</strong>
+              <div style="display:flex; gap:8px;">
+                <button id="token-import" class="btn small">Import</button>
+                <button id="token-export" class="btn small">Export</button>
+                <button id="token-add" class="btn small primary">Add token</button>
+              </div>
+            </div>
+            <div id="token-list" style="margin-top:8px; max-height:160px; overflow:auto;"></div>
+          </div>
+
+          <!-- Property inspector (schema-driven) -->
+          <div style="margin-top:12px;">
+            <label style="font-weight:600">Rule editor / Inspector</label>
+            <div id="inspector-root" style="margin-top:8px; display:flex; gap:12px;">
+              <div id="props-column" style="flex:1; max-height:360px; overflow:auto; border:1px solid #f1f5f9; padding:8px; border-radius:6px;">
+                <!-- property search + generated prop rows get inserted here -->
+                <div id="props-search-wrap" style="margin-bottom:8px; display:flex; gap:8px;">
+                  <input id="prop-search" type="search" placeholder="Search properties..." style="flex:1; padding:6px 8px; border-radius:6px; border:1px solid #e6e9f2;" />
+                  <select id="scope-select" title="Apply scope">
+                    <option value="inline">Inline (selected element)</option>
+                    <option value="rule" selected>Selector rule (global)</option>
+                    <option value="component">Component-scope (.component .selector)</option>
+                  </select>
+                </div>
+
+                <div id="props-list" style="min-width:580px;"></div>
+              </div>
+
+              <div id="css-editor-column" style="width:420px;">
+                <div style="font-size:13px; color:#475569; margin-bottom:6px;"><strong>Preview / Generated CSS</strong></div>
+                <textarea id="preview-css" rows="14" style="width:100%; font-family:monospace;"></textarea>
+                <div style="margin-top:8px; display:flex; gap:8px;">
+                  <button id="apply-to-preview" class="btn small primary">Apply preview</button>
+                  <button id="apply-to-stylesheet" class="btn small">Apply to stylesheet</button>
+                  <button id="save-css" class="btn small">Save stylesheet</button>
+                  <button id="reload-css" class="btn small muted">Reload</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- full editor (kept as fallback) -->
+          <div style="margin-top:12px;">
+            <label style="font-weight:600">Full stylesheet (editable)</label>
+            <textarea id="full-css-editor" rows="10" style="width:100%; font-family: monospace; margin-top:6px;"></textarea>
+          </div>
+        </div>
+        <!-- END REPLACED CSS PANEL -->
+
+        <!-- RIGHT: dynamic attributes / inspector -->
+        <div class="panel attr-panel" id="attr-panel" aria-label="Attributes">
+          <h4>Element info</h4>
+          <div id="selected-info">No element selected</div>
+
+          <div id="attr-dynamic-list">
+            <!-- attribute controls injected here by script.js -->
+          </div>
+
+          <div id="upload-area" style="margin-top:12px; display:none;">
+            <label>Upload file for this element</label>
+            <input id="upload-file-input" type="file" />
+            <div style="margin-top:8px;">
+              <select id="upload-target-select">
+                <option value="images">Images (images/)</option>
+                <option value="videos">Videos (videos/)</option>
+                <option value="audio">Audio (audio/)</option>
+                <option value="files">Files (files/)</option>
+              </select>
+              <button id="upload-file-btn" class="btn small">Upload</button>
+            </div>
+            <div id="upload-status" style="margin-top:8px; color:#334155;"></div>
+          </div>
+
+          <!-- Fixed action bar: always bottom-right inside preview modal -->
+          <div id="fixed-action-bar" aria-hidden="false" role="region" aria-label="Editor actions">
+            <div class="fab-inner">
+              <div class="fab-left">
+                <button id="apply-attrs" class="btn fab primary" title="Apply (Enter)" aria-label="Apply changes">Apply</button>
+                <button id="delete-element" class="btn fab danger" title="Delete (Delete)" aria-label="Delete element">Delete</button>
+              </div>
+
+              <div class="fab-right" id="arrows" aria-label="Move / indent controls">
+                <button id="move-up" class="btn fab" title="Move up (↑)" aria-label="Move up">↑</button>
+                <button id="move-down" class="btn fab" title="Move down (↓)" aria-label="Move down">↓</button>
+                <button id="shift" class="btn fab" title="Indent (Tab)" aria-label="Indent">→</button>
+                <button id="unshif" class="btn fab" title="Outdent (Shift+Tab)" aria-label="Outdent">←</button>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- end attr-panel -->
+      </div> <!-- end preview-card -->
+    </div> <!-- end modal-overlay -->
+  </div> <!-- end preview-modal -->
+
+  
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

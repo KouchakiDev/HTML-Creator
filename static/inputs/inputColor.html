@@ -1,0 +1,509 @@
+<!-- inputColor.html — inline color editor compatible with inspector -->
+<div class="color-editor" style="display:inline-block;width:100%;box-sizing:border-box">
+  <style>
+    .color-editor{ --panel:#ffffff; --muted:#6b7280; --accent:#4f46e5; --radius:10px; --gap:10px; --shadow: 0 8px 28px rgba(9,10,25,0.06); font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial; color:#0f1724; font-size:13px }
+    .color-input{width:44px;height:28px;border-radius:8px;border:1px solid rgba(15,23,42,0.06);display:inline-flex;align-items:center;justify-content:center;cursor:default;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 1px 2px rgba(12,15,30,0.04)}
+    .color-swatch{width:36px;height:20px;border-radius:6px;position:relative;overflow:hidden}
+    .checker{position:absolute;inset:0;background-image:linear-gradient(45deg,#eee 25%,transparent 25%),linear-gradient(-45deg,#eee 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#eee 75%),linear-gradient(-45deg,transparent 75%,#eee 75%);background-size:12px 12px;background-position:0 0,0 6px,6px -6px,-6px 0}
+    .swatch-fill{position:absolute;inset:0;border-radius:6px; background:transparent}
+
+    /* panel inline (no absolute popover) */
+    .panel{ margin-top:10px; background:var(--panel); border-radius:12px; box-shadow:var(--shadow); padding:12px; border:1px solid rgba(15,23,42,0.03); display:block }
+    .tabs{display:flex;gap:8px;margin-bottom:8px}
+    .tab{flex:1;padding:6px;border-radius:8px;text-align:center;font-size:13px;color:var(--muted);cursor:pointer;user-select:none}
+    .tab.active{background:linear-gradient(90deg,var(--accent),#2dd4bf);color:#fff}
+
+    .row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+    .muted{font-size:12px;color:var(--muted)}
+    .color-editor input[type=color]{width:36px;height:28px;border-radius:6px;border:0;padding:0;background:transparent;cursor:pointer}
+    .color-editor input[type=text],.color-editor input[type=number]{padding:8px;border-radius:8px;border:1px solid #eef2ff;font-size:13px}
+    .color-editor input[type=range]{width:100%}
+
+    .strip{height:30px;border-radius:8px;position:relative;cursor:pointer;border:1px solid rgba(0,0,0,0.04);overflow:visible}
+    .stop{position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 6px 18px rgba(79,70,229,0.12);cursor:pointer;touch-action:none}
+    .stop.sel{box-shadow:0 0 0 6px rgba(79,70,229,0.10)}
+    .ratio-line{height:6px;background:rgba(0,0,0,0.04);border-radius:6px;margin-top:6px;position:relative;touch-action:none}
+    .ratio-handle{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 6px 18px rgba(79,70,229,0.12);cursor:pointer;touch-action:none}
+
+    .dir{display:flex;gap:12px;align-items:center}
+    .dir-circle{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px dashed rgba(15,23,42,0.04);position:relative}
+    .dir-handle{width:12px;height:12px;border-radius:50%;background:var(--accent);position:absolute;transform:translate(-50%,-50%);cursor:grab;touch-action:none}
+
+    .preview{height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;padding:8px;box-sizing:border-box}
+    .code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;padding:8px;border-radius:8px;background:#0b1220;color:#dff0ff;margin-top:8px;overflow:auto;max-width:100%;box-sizing:border-box;white-space:pre-wrap;word-break:break-word}
+
+    .actions{display:flex;justify-content:flex-end;margin-top:8px}
+    .btn{padding:8px 10px;border-radius:10px;border:1px solid #eef2ff;background:#fff;cursor:pointer}
+    @media (max-width:420px){ .panel{ padding:10px } .tabs{flex-direction:row} }
+  </style>
+
+  <!-- header: swatch + quick summary -->
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;min-width:0;">
+      <div class="color-input" title="Color summary" aria-hidden="true">
+        <span class="color-swatch" aria-hidden="true">
+          <span class="checker" aria-hidden="true"></span>
+          <span class="swatch-fill" aria-hidden="true" style="background:rgba(255,0,0,1)"></span>
+        </span>
+      </div>
+      <div class="miniValue muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px">background: rgba(255, 0, 0, 1);</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn quick-reset" type="button" title="Reset">Reset</button>
+    </div>
+  </div>
+
+  <!-- inline panel -->
+  <div class="panel" role="group" aria-label="Color editor panel">
+    <div class="tabs" role="tablist">
+      <button class="tab tab-solid active" role="tab" aria-selected="true">Solid</button>
+      <button class="tab tab-grad" role="tab" aria-selected="false">Gradient</button>
+    </div>
+
+    <!-- solid -->
+    <div class="panel-solid" role="tabpanel">
+      <div class="row" style="align-items:center">
+        <input class="solid-color" type="color" aria-label="Solid color" />
+        <input class="solid-hex" type="text" placeholder="#RRGGBB" aria-label="Hex value" style="width:120px" />
+      </div>
+      <div class="row">
+        <div class="muted">Alpha</div>
+        <input class="solid-a" type="range" min="0" max="1" step="0.01" aria-label="Alpha" />
+      </div>
+      <div class="solid-preview preview" style="background:#111">Preview</div>
+      <pre class="solid-code code output" aria-live="polite">background: rgba(255,0,0,1);</pre>
+    </div>
+
+    <!-- gradient -->
+    <div class="panel-grad" role="tabpanel" style="display:none">
+      <div class="row">
+        <div style="flex:1;min-width:180px">
+          <div class="strip" aria-hidden="true"></div>
+          <div class="ratio-line"><div class="ratio-handle" style="left:50%"></div></div>
+        </div>
+      </div>
+
+      <div class="row" style="align-items:center">
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="muted">Stop 1</div>
+          <input class="g-color-0" type="color" aria-label="Gradient stop 1" />
+          <input class="g-hex-0" type="text" placeholder="#RRGGBB" style="width:84px" aria-label="Stop 1 hex" />
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="muted">Stop 2</div>
+          <input class="g-color-1" type="color" aria-label="Gradient stop 2" />
+          <input class="g-hex-1" type="text" placeholder="#RRGGBB" style="width:84px" aria-label="Stop 2 hex" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="dir">
+          <div class="dir-circle" aria-hidden="true"><div class="dir-handle"></div></div>
+          <div>
+            <div class="muted angle-label">Angle: 90°</div>
+            <input class="g-angle" type="number" min="0" max="360" step="1" value="90" style="width:84px;margin-top:6px" aria-label="Gradient angle (deg)" />
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:160px">
+          <div class="muted">Preview</div>
+          <div class="g-preview preview" style="background:linear-gradient(90deg,#f00 0%, #00f 100%)">Gradient</div>
+        </div>
+      </div>
+
+      <pre class="g-code code">background: linear-gradient(90deg,#ff0000 0%, #0000ff 100%);</pre>
+    </div>
+
+    <div class="actions" style="margin-top:10px">
+      <button class="btn apply-btn" type="button">Apply (notify inspector)</button>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const container = document.currentScript && document.currentScript.parentElement;
+      if(!container) return;
+
+      // scope elements
+      const swatchFill = container.querySelector('.swatch-fill');
+      const miniValue = container.querySelector('.miniValue');
+      const tabSolid = container.querySelector('.tab-solid');
+      const tabGrad = container.querySelector('.tab-grad');
+      const panelSolid = container.querySelector('.panel-solid');
+      const panelGrad = container.querySelector('.panel-grad');
+
+      const solidColor = container.querySelector('.solid-color');
+      const solidHex = container.querySelector('.solid-hex');
+      const solidA = container.querySelector('.solid-a');
+      const solidPreview = container.querySelector('.solid-preview');
+      const solidCode = container.querySelector('.solid-code');
+
+      const strip = container.querySelector('.strip');
+      const ratioLine = container.querySelector('.ratio-line');
+      const ratioHandle = container.querySelector('.ratio-handle');
+      const gColor0 = container.querySelector('.g-color-0');
+      const gHex0 = container.querySelector('.g-hex-0');
+      const gColor1 = container.querySelector('.g-color-1');
+      const gHex1 = container.querySelector('.g-hex-1');
+      const dirCircle = container.querySelector('.dir-circle');
+      const dirHandle = container.querySelector('.dir-handle');
+      const angleLabel = container.querySelector('.angle-label');
+      const gAngle = container.querySelector('.g-angle');
+      const gPreview = container.querySelector('.g-preview');
+      const gCode = container.querySelector('.g-code');
+      const output = container.querySelector('.output');
+      const applyBtn = container.querySelector('.apply-btn');
+      const quickReset = container.querySelector('.quick-reset');
+
+      // helpers
+      const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+      function hexToRgb(hex){ if(!hex) return null; hex = hex.replace('#','').trim(); if(hex.length===3) hex = hex.split('').map(c=>c+c).join(''); if(hex.length!==6) return null; return { r: parseInt(hex.slice(0,2),16), g: parseInt(hex.slice(2,4),16), b: parseInt(hex.slice(4,6),16) }; }
+      function rgbToHex(r,g,b){ return '#'+[r,g,b].map(v=>{ const s=Math.round(v).toString(16); return s.length===1 ? '0'+s : s }).join('').toUpperCase(); }
+      function parseRGBAString(s){
+        if(!s) return null;
+        const m = s.match(/rgba?\s*\(\s*([0-9.]+)[^\d.]*([0-9.]+)[^\d.]*([0-9.]+)(?:[^\d.]+([0-9.]+))?\s*\)/i);
+        if(m) return { r:+m[1], g:+m[2], b:+m[3], a: typeof m[4] !== 'undefined' ? +m[4] : 1 };
+        return null;
+      }
+
+      // state
+      const state = {
+        mode: 'solid',
+        solid: { r:255, g:0, b:0, a:1 },
+        grad: { angle:90, stops: [{color:'#FF0000', pos:0},{color:'#0000FF', pos:100}], sel:0 }
+      };
+      // try initialize from inspector / dataset / computed style
+(function tryInitFromInspector() {
+  try {
+    let initial = null;
+    // 1) row.dataset.currentValue (the .prop-row that createPropRow created)
+    let p = container;
+    while (p && !p.classList.contains('prop-control')) p = p.parentElement;
+    // p is .prop-control; the .prop-row is p.closest('.prop-row')
+    const row = p ? (p.closest ? p.closest('.prop-row') : null) : null;
+    if (row && row.dataset && row.dataset.currentValue) {
+      initial = row.dataset.currentValue.trim();
+    }
+    // 2) fallback: template-proxy value
+    if (!initial && p) {
+      const proxy = p.querySelector('.template-proxy') || document.querySelector('.template-proxy');
+      if (proxy && proxy.value) initial = proxy.value.trim();
+    }
+    // 3) fallback: computed style from selectedElement (if available)
+    if (!initial && typeof selectedElement !== 'undefined' && selectedElement && window.getComputedStyle) {
+      const propName = row && row.dataset && row.dataset.prop ? row.dataset.prop : null;
+      if (propName) {
+        const cs = window.getComputedStyle(selectedElement);
+        const cur = cs.getPropertyValue(propName) || selectedElement.style.getPropertyValue(propName) || '';
+        if (cur && cur.trim()) initial = cur.trim();
+      }
+    }
+
+    if (!initial) return;
+
+    // decide: linear-gradient vs rgba/hex
+    if (/linear-gradient\(/i.test(initial)) {
+      // simple gradient parse (angle + two stops)
+      try {
+        state.mode = 'grad';
+        const m = initial.match(/linear-gradient\(\s*([^\s,]+)[\s,]+(.+)\)/i);
+        if (m) {
+          const angleStr = m[1].trim();
+          const angleMatch = angleStr.match(/(\d+)(deg)?/);
+          if (angleMatch) state.grad.angle = parseInt(angleMatch[1],10);
+          const stopsStr = m[2].trim().replace(/\)$/, '');
+          const stops = stopsStr.split(',').map(s => s.trim());
+          state.grad.stops = stops.map((s,i) => {
+            const parts = s.split(/\s+/);
+            const color = parts[0];
+            const pos = parts[1] ? parseInt(parts[1],10) : (i===0?0:100);
+            return { color, pos };
+          });
+        }
+      } catch (e) { /* ignore parse errors */ }
+      // refresh grad UI later via updateGradUI in init below
+    } else {
+      // try rgba(...) or hex
+      const rgba = initial.match(/rgba?\(\s*(\d+)[,\s]+\s*(\d+)[,\s]+\s*(\d+)(?:[,\s]+([0-9.]+))?\s*\)/i);
+      if (rgba) {
+        state.mode = 'solid';
+        state.solid.r = parseInt(rgba[1],10);
+        state.solid.g = parseInt(rgba[2],10);
+        state.solid.b = parseInt(rgba[3],10);
+        state.solid.a = rgba[4] ? parseFloat(rgba[4]) : 1;
+      } else {
+        const hexMatch = initial.match(/#([0-9a-fA-F]{3,8})/);
+        if (hexMatch) {
+          const hex = hexMatch[0].toUpperCase();
+          const p = hexToRgb(hex);
+          if (p) {
+            state.mode = 'solid';
+            state.solid.r = p.r; state.solid.g = p.g; state.solid.b = p.b; state.solid.a = 1;
+          }
+        }
+      }
+    }
+
+    // now update the UI (call appropriate update functions if they exist)
+    try { if (state.mode === 'solid') updateSolidUI(); else updateGradUI(); } catch(e){}
+  } catch (e) { /* swallow */ }
+})();
+
+      // inspector proxy finder
+      function findProxy(){
+        let p = container;
+        while(p && !p.classList.contains('prop-control')) p = p.parentElement;
+        return (p && p.querySelector('.template-proxy')) || document.querySelector('.template-proxy');
+      }
+      function setInspectorProxyValue(val){
+        const proxy = findProxy();
+        if(proxy){
+          proxy.value = String(val||'');
+          proxy.dispatchEvent(new Event('change', { bubbles:true }));
+        }
+      }
+
+      // builders
+      function makeSolidCSS(){
+        const c = state.solid;
+        return `background: rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${Number((c.a||1)).toFixed(2)});`;
+      }
+      function makeGradCSS(){
+        const g = state.grad;
+        const stops = g.stops.map(s => `${s.color} ${s.pos}%`).join(', ');
+        return `background: linear-gradient(${g.angle}deg, ${stops});`;
+      }
+
+      function updateSwatchAndMini(css){
+        if(swatchFill) {
+          if(state.mode === 'solid'){
+            swatchFill.style.background = `rgba(${Math.round(state.solid.r)}, ${Math.round(state.solid.g)}, ${Math.round(state.solid.b)}, ${Number((state.solid.a||1)).toFixed(2)})`;
+          } else {
+            swatchFill.style.background = `linear-gradient(${state.grad.angle}deg, ${state.grad.stops.map(s=>s.color+' '+s.pos+'%').join(', ')})`;
+          }
+        }
+        if(miniValue) miniValue.textContent = css;
+        if(output) output.textContent = css;
+      }
+
+      // UI updates
+      function updateSolidUI(){
+        const c = state.solid;
+        if(solidColor) solidColor.value = rgbToHex(c.r,c.g,c.b);
+        if(solidHex) solidHex.value = solidColor ? solidColor.value : rgbToHex(c.r,c.g,c.b);
+        if(solidA) solidA.value = (typeof c.a !== 'undefined' ? c.a : 1);
+        if(solidPreview) solidPreview.style.background = `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${Number((c.a||1)).toFixed(2)})`;
+        const css = makeSolidCSS();
+        if(solidCode) solidCode.textContent = css;
+        updateSwatchAndMini(css);
+        setInspectorProxyValue(css);
+      }
+
+      function updateGradUI(){
+        const g = state.grad;
+        if(strip) strip.style.background = `linear-gradient(90deg, ${g.stops.map(s=>s.color+' '+s.pos+'%').join(', ')})`;
+        if(strip){
+          strip.querySelectorAll('.stop').forEach(x=>x.remove());
+          g.stops.forEach((s,i)=>{
+            const el = document.createElement('div');
+            el.className = 'stop' + (i===g.sel ? ' sel' : '');
+            el.style.left = s.pos + '%';
+            el.style.background = s.color;
+            el.dataset.i = i;
+            strip.appendChild(el);
+            el.addEventListener('pointerdown', ev => {
+              draggingStop = { el, idx: +el.dataset.i };
+              try{ el.setPointerCapture(ev.pointerId);}catch(_){}
+              ev.preventDefault();
+            });
+          });
+        }
+        if(gColor0) gColor0.value = g.stops[0].color;
+        if(gHex0) gHex0.value = g.stops[0].color;
+        if(gColor1) gColor1.value = g.stops[1].color;
+        if(gHex1) gHex1.value = g.stops[1].color;
+        if(gAngle) gAngle.value = g.angle;
+        if(gPreview) gPreview.style.background = `linear-gradient(${g.angle}deg, ${g.stops.map(s=>s.color+' '+s.pos+'%').join(', ')})`;
+        if(gCode) gCode.textContent = makeGradCSS();
+        if(ratioHandle) ratioHandle.style.left = g.stops[1].pos + '%';
+        placeDirHandle();
+        const css = makeGradCSS();
+        updateSwatchAndMini(css);
+        setInspectorProxyValue(css);
+      }
+
+      // seed initial from proxy or container.dataset.value
+      function seedFromValue(val){
+        if(!val) return false;
+        val = String(val).trim();
+        // gradient?
+        if(/linear-gradient/i.test(val)){
+          // try to capture angle and stops rudimentarily
+          const m = val.match(/linear-gradient\(\s*([0-9]+)deg\s*,\s*(.+)\)/i);
+          if(m){
+            const ang = parseInt(m[1],10) || 90;
+            const stopsStr = m[2];
+            const stopsParts = stopsStr.split(',').map(s=>s.trim());
+            const stops = stopsParts.slice(0,2).map(sp=>{
+              // try find color (#hex or rgba(...))
+              const hexMatch = sp.match(/#([0-9a-fA-F]{3,6})/);
+              const rgbaMatch = sp.match(/rgba?\([^)]+\)/i);
+              const color = rgbaMatch ? rgbaMatch[0] : (hexMatch ? ('#'+hexMatch[1]) : '#000000');
+              const posMatch = sp.match(/([0-9]+)\s*%/);
+              const pos = posMatch ? parseInt(posMatch[1],10) : (stopsParts.indexOf(sp)===0?0:100);
+              return { color, pos };
+            });
+            state.mode = 'grad';
+            state.grad.angle = ang;
+            if(stops.length===2) state.grad.stops = stops;
+            return true;
+          }
+        }
+        // solid: try rgba(...)
+        const rgba = parseRGBAString(val);
+        if(rgba){
+          state.mode = 'solid';
+          state.solid = { r:rgba.r, g:rgba.g, b:rgba.b, a:rgba.a };
+          return true;
+        }
+        // hex
+        const hexm = val.match(/#([0-9a-fA-F]{3,6})/);
+        if(hexm){
+          const hex = '#'+hexm[1];
+          const rgb = hexToRgb(hex);
+          if(rgb){ state.mode='solid'; state.solid = { r:rgb.r, g:rgb.g, b:rgb.b, a:1 }; return true; }
+        }
+        return false;
+      }
+
+      (function init(){
+        // try proxy value then data-value
+        let seeded = false;
+        try{
+          const proxy = findProxy();
+          const pv = proxy && String(proxy.value || '').trim();
+          if(pv) seeded = seedFromValue(pv);
+        }catch(e){}
+        if(!seeded){
+          const dv = container.dataset && container.dataset.value ? String(container.dataset.value).trim() : '';
+          if(dv) seeded = seedFromValue(dv);
+        }
+
+        // apply UI values
+        if(state.mode === 'solid'){
+          panelSolid.style.display='block'; panelGrad.style.display='none';
+        } else {
+          panelSolid.style.display='none'; panelGrad.style.display='block';
+        }
+
+        // fill UI fields
+        if(solidColor) solidColor.value = rgbToHex(state.solid.r||255,state.solid.g||0,state.solid.b||0);
+        if(solidHex) solidHex.value = solidColor ? solidColor.value : rgbToHex(state.solid.r||255,state.solid.g||0,state.solid.b||0);
+        if(solidA) solidA.value = (typeof state.solid.a !== 'undefined' ? state.solid.a : 1);
+
+        if(gColor0) gColor0.value = state.grad.stops[0].color;
+        if(gHex0) gHex0.value = state.grad.stops[0].color;
+        if(gColor1) gColor1.value = state.grad.stops[1].color;
+        if(gHex1) gHex1.value = state.grad.stops[1].color;
+        if(gAngle) gAngle.value = state.grad.angle;
+        placeDirHandle();
+        updateSolidUI();
+        updateGradUI();
+      })();
+
+      // interactions
+      if(solidColor) solidColor.addEventListener('input', ()=>{
+        const hex = solidColor.value.toUpperCase();
+        const rgb = hexToRgb(hex);
+        if(!rgb) return;
+        state.solid.r = rgb.r; state.solid.g = rgb.g; state.solid.b = rgb.b;
+        if(solidHex) solidHex.value = hex;
+        updateSolidUI();
+      });
+      if(solidHex) solidHex.addEventListener('change', ()=>{
+        const rgb = hexToRgb(solidHex.value);
+        if(!rgb) return;
+        if(solidColor) solidColor.value = rgbToHex(rgb.r,rgb.g,rgb.b);
+        state.solid.r = rgb.r; state.solid.g = rgb.g; state.solid.b = rgb.b;
+        updateSolidUI();
+      });
+      if(solidA) solidA.addEventListener('input', ()=>{ state.solid.a = parseFloat(solidA.value||1); updateSolidUI(); });
+
+      // gradient interactions
+      let draggingStop = null;
+      window.addEventListener('pointermove', (e)=>{
+        if(!draggingStop) return;
+        const rect = strip.getBoundingClientRect();
+        let x = clamp(e.clientX - rect.left,0,rect.width);
+        const pct = Math.round((x/rect.width)*100);
+        state.grad.stops[draggingStop.idx].pos = pct;
+        updateGradUI();
+      });
+      window.addEventListener('pointerup', (e)=>{
+        if(draggingStop){
+          try{ draggingStop.el.releasePointerCapture(e.pointerId);}catch(_){}
+          draggingStop = null;
+        }
+      });
+      if(strip){
+        strip.addEventListener('pointerdown', (e)=>{
+          const rect = strip.getBoundingClientRect();
+          const x = clamp(e.clientX - rect.left,0,rect.width);
+          const pct = (x/rect.width)*100;
+          let nearest = 0, best = 999;
+          state.grad.stops.forEach((s, idx)=>{ const d = Math.abs(s.pos - pct); if(d < best){ best = d; nearest = idx; }});
+          state.grad.sel = nearest;
+          updateGradUI();
+        });
+      }
+
+      [gColor0,gColor1].forEach((el,i)=>{ if(!el) return; el.addEventListener('input', ()=>{ state.grad.stops[i].color = el.value.toUpperCase(); (i===0?gHex0:gHex1).value = el.value.toUpperCase(); updateGradUI(); }); });
+      [gHex0,gHex1].forEach((el,i)=>{ if(!el) return; el.addEventListener('change', ()=>{ const p = hexToRgb(el.value); if(!p) return; state.grad.stops[i].color = el.value.toUpperCase(); (i===0?gColor0:gColor1).value = el.value.toUpperCase(); updateGradUI(); }); });
+
+      // ratio handle (controls stop1 pos)
+      let draggingRatio = false;
+      if(ratioHandle){
+        ratioHandle.addEventListener('pointerdown', (e)=>{ draggingRatio=true; ratioHandle.setPointerCapture(e.pointerId); e.preventDefault(); });
+        window.addEventListener('pointermove', (e)=>{ if(!draggingRatio) return; const rect = ratioLine.getBoundingClientRect(); let x = clamp(e.clientX - rect.left, 0, rect.width); const pct = Math.round((x/rect.width)*100); state.grad.stops[1].pos = pct; updateGradUI(); });
+        window.addEventListener('pointerup', (e)=>{ if(draggingRatio){ try{ ratioHandle.releasePointerCapture(e.pointerId);}catch(_){ } draggingRatio=false; }});
+        ratioLine.addEventListener('pointerdown', (e)=>{ const rect = ratioLine.getBoundingClientRect(); const x = clamp(e.clientX - rect.left, 0, rect.width); const pct = Math.round((x/rect.width)*100); state.grad.stops[1].pos = pct; updateGradUI(); });
+      }
+
+      // dir handle drag => angle
+      let draggingDir = false;
+      if(dirHandle){
+        dirHandle.addEventListener('pointerdown',(e)=>{ draggingDir=true; try{ dirHandle.setPointerCapture(e.pointerId);}catch(_){ } dirHandle.style.cursor='grabbing'; e.preventDefault(); });
+        window.addEventListener('pointermove', (e)=>{ if(!draggingDir) return; const rect = dirCircle.getBoundingClientRect(); const cx = rect.left+rect.width/2, cy = rect.top+rect.height/2; const dx = e.clientX - cx, dy = e.clientY - cy; const deg = (Math.atan2(-dy, dx)*180/Math.PI + 90 + 360) % 360; state.grad.angle = Math.round(deg); placeDirHandle(); updateGradUI(); });
+        window.addEventListener('pointerup', (e)=>{ if(draggingDir){ try{ dirHandle.releasePointerCapture(e.pointerId);}catch(_){ } dirHandle.style.cursor='grab'; draggingDir=false; }});
+      }
+
+      function placeDirHandle(){
+        if(!dirCircle || !dirHandle) return;
+        const rect = dirCircle.getBoundingClientRect();
+        const radius = rect.width/2 - 10;
+        const deg = state.grad.angle;
+        const rad = (deg-90)*Math.PI/180;
+        const hx = rect.width/2 + radius*Math.cos(rad);
+        const hy = rect.height/2 + radius*Math.sin(rad);
+        dirHandle.style.left = hx + 'px';
+        dirHandle.style.top = hy + 'px';
+        if(angleLabel) angleLabel.textContent = 'Angle: ' + state.grad.angle + '°';
+      }
+
+      if(gAngle) gAngle.addEventListener('input', ()=>{ let v = parseInt(gAngle.value||0,10); if(isNaN(v)) v=0; v = ((v%360)+360)%360; state.grad.angle = v; placeDirHandle(); updateGradUI(); });
+
+      // tabs
+      if(tabSolid) tabSolid.addEventListener('click', ()=>{ tabSolid.classList.add('active'); tabGrad.classList.remove('active'); panelSolid.style.display='block'; panelGrad.style.display='none'; state.mode='solid'; updateSolidUI(); });
+      if(tabGrad) tabGrad.addEventListener('click', ()=>{ tabGrad.classList.add('active'); tabSolid.classList.remove('active'); panelSolid.style.display='none'; panelGrad.style.display='block'; state.mode='grad'; updateGradUI(); });
+
+      if(applyBtn) applyBtn.addEventListener('click', ()=>{ const css = (state.mode==='solid')?makeSolidCSS():makeGradCSS(); setInspectorProxyValue(css); /* flash output for feedback */ if(output){ output.style.transition='none'; output.style.background='#113344'; setTimeout(()=>output.style.background='',160); } });
+
+      if(quickReset) quickReset.addEventListener('click', ()=>{ state.mode='solid'; state.solid = { r:0,g:0,b:0,a:0 }; state.grad = { angle:90, stops:[{color:'#000000',pos:0},{color:'#000000',pos:100}], sel:0 }; tabSolid.click(); updateSolidUI(); updateGradUI(); });
+
+      // expose for debug
+      container._colorEditorState = state;
+
+    })();
+  </script>
+</div>

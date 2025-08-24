@@ -1,0 +1,347 @@
+<!-- inputStroke.html — inline stroke editor compatible with inspector -->
+<div class="stroke-editor" style="width:100%; box-sizing:border-box; font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,Arial;">
+  <style>
+    .stroke-editor{ --panel:#ffffff; --muted:#6b7280; --accent:#4f46e5; --shadow:0 8px 28px rgba(9,10,25,0.06); color:#0f1724; font-size:13px }
+    .stroke-header{ display:flex; gap:10px; align-items:center; justify-content:space-between; }
+    .stroke-trigger{ display:flex; gap:8px; align-items:center; padding:6px 8px; border-radius:8px; border:1px solid rgba(15,23,42,0.06); background:#fff; min-width:0; cursor:default; }
+    .chip{ width:20px; height:20px; border-radius:4px; position:relative; overflow:hidden; flex:0 0 20px }
+    .checker{ position:absolute; inset:0;
+      background-image:linear-gradient(45deg,#eee 25%,transparent 25%),linear-gradient(-45deg,#eee 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#eee 75%),linear-gradient(-45deg,transparent 75%,#eee 75%);
+      background-size:12px 12px; background-position:0 0,0 6px,6px -6px,-6px 0; opacity:.9 }
+    .chip-fill{ position:absolute; inset:0; border-radius:4px; background:transparent }
+
+    /* PANEL is inline now (no absolute positioning) */
+    .panel{ margin-top:10px; background:var(--panel); border-radius:12px; box-shadow:var(--shadow); padding:12px; border:1px solid rgba(15,23,42,0.03); display:block }
+    .row{ display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap }
+    .muted{ font-size:12px; color:var(--muted) }
+    .stroke-editor input[type=color]{ width:36px; height:32px; border:0; padding:0; background:transparent; cursor:pointer; border-radius:6px }
+    .stroke-editor input[type=text], .stroke-editor input[type=number], .stroke-editor select{ padding:8px; border-radius:8px; border:1px solid #eef2ff; font-size:13px; width:100%; box-sizing:border-box }
+    .stroke-editor input[type=range]{ width:100% }
+    .previewWrap{ padding:10px; border-radius:10px; background:#fafbff; border:1px solid rgba(15,23,42,0.04) }
+    .previewTarget{ min-height:56px; border-radius:8px; background:#ffffff; display:flex; align-items:center; justify-content:center; font-size:12px; color:#334155; padding:8px; box-sizing:border-box }
+    .code{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; padding:8px; border-radius:8px; background:#0b1220; color:#dff0ff; margin-top:8px; overflow:auto; max-width:100%; white-space:pre-wrap; word-break:break-word }
+
+    .actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px }
+    .btn{ padding:8px 10px; border-radius:10px; border:1px solid #eef2ff; background:#fff; cursor:pointer; font-size:13px }
+
+    /* small responsive */
+    @media (max-width:420px){ .panel{ padding:10px } .stroke-header{ flex-direction:column; align-items:flex-start; gap:6px } }
+  </style>
+
+  <!-- compact header: summary + chip (always visible inline) -->
+  <div class="stroke-header">
+    <div style="display:flex; gap:8px; align-items:center; min-width:0;">
+      <div class="stroke-trigger" title="Stroke summary">
+        <span class="chip" aria-hidden="true">
+          <span class="checker" aria-hidden="true"></span>
+          <span class="chip-fill" aria-hidden="true" style="background:rgba(79,70,229,1)"></span>
+        </span>
+        <span class="miniValue muted" style="font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:260px">3px solid rgba(79,70,229,1)</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <!-- optional: quick reset -->
+      <button class="btn reset-btn" title="Reset to none" type="button">Reset</button>
+    </div>
+  </div>
+
+  <!-- panel: inline controls (no pop, no absolute) -->
+  <div class="panel" role="group" aria-label="Stroke editor panel">
+    <div class="row">
+      <div style="width:88px; min-width:88px">
+        <div class="muted">Width (px)</div>
+        <div style="display:flex; gap:6px; align-items:center">
+          <input class="w-num" type="number" min="0" max="128" value="3" aria-label="Stroke width" />
+        </div>
+      </div>
+
+      <div style="flex:1; min-width:140px">
+        <div class="muted">Adjust</div>
+        <input class="w-range" type="range" min="0" max="128" step="1" value="3" aria-label="Stroke width range" />
+      </div>
+
+      <div style="width:132px; min-width:132px">
+        <div class="muted">Style</div>
+        <select class="style-sel" aria-label="Stroke style">
+          <option value="solid" selected>solid</option>
+          <option value="dashed">dashed</option>
+          <option value="dotted">dotted</option>
+          <option value="double">double</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div style="display:flex; gap:8px; align-items:center; min-width:0;">
+        <input class="color-input" type="color" aria-label="Color" />
+        <input class="hex-input" type="text" placeholder="#RRGGBB" aria-label="Hex" style="width:110px" />
+      </div>
+      <div style="flex:1; min-width:120px">
+        <div class="muted">Alpha</div>
+        <input class="alpha-range" type="range" min="0" max="1" step="0.01" value="1" aria-label="Alpha" />
+      </div>
+    </div>
+
+    <div class="previewWrap" style="margin-top:6px">
+      <div class="row" style="margin-bottom:8px">
+        <div class="muted">Preview target</div>
+        <select class="preview-prop" style="width:160px">
+          <option value="border" selected>border</option>
+          <option value="outline">outline</option>
+          <option value="column-rule">column-rule</option>
+          <option value="text-decoration">text-decoration</option>
+        </select>
+      </div>
+      <div class="previewTarget">Sample</div>
+    </div>
+
+    <pre class="code output" aria-live="polite">3px solid rgba(79,70,229,1)</pre>
+
+    <div class="actions">
+      <button class="btn apply-btn" type="button">Apply (notify inspector)</button>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const container = document.currentScript && document.currentScript.parentElement;
+      if(!container) return;
+
+      // scoped elements
+      const chipFill = container.querySelector('.chip-fill');
+      const miniValue = container.querySelector('.miniValue');
+      const wNum = container.querySelector('.w-num');
+      const wRange = container.querySelector('.w-range');
+      const styleSel = container.querySelector('.style-sel');
+      const colorInput = container.querySelector('.color-input');
+      const hexInput = container.querySelector('.hex-input');
+      const alphaRange = container.querySelector('.alpha-range');
+      const preview = container.querySelector('.previewTarget');
+      const previewProp = container.querySelector('.preview-prop');
+      const out = container.querySelector('.output');
+      const applyBtn = container.querySelector('.apply-btn');
+      const resetBtn = container.querySelector('.reset-btn');
+
+      // helpers
+      const clamp = (v,a,b) => Math.min(b, Math.max(a,v));
+      function hexToRgb(hex){
+        if(!hex) return null;
+        hex = hex.replace('#','').trim();
+        if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+        if(hex.length!==6) return null;
+        return { r: parseInt(hex.slice(0,2),16), g: parseInt(hex.slice(2,4),16), b: parseInt(hex.slice(4,6),16) };
+      }
+      function rgbToHex(r,g,b){
+        return '#'+[r,g,b].map(v=>{ const s = Math.round(v).toString(16); return s.length===1 ? '0'+s : s }).join('').toUpperCase();
+      }
+      function parseRGBAString(s){
+        // parse "rgba(r,g,b,a)" or "rgb(r,g,b)"
+        if(!s) return null;
+        const m = s.match(/rgba?\s*\(\s*([0-9.]+)[^\d.]*([0-9.]+)[^\d.]*([0-9.]+)(?:[^\d.]+([0-9.]+))?\s*\)/i);
+        if(m){
+          return { r: parseFloat(m[1]), g: parseFloat(m[2]), b: parseFloat(m[3]), a: typeof m[4] !== 'undefined' ? parseFloat(m[4]) : 1 };
+        }
+        return null;
+      }
+      function namedColorToRgb(name){
+        // cheap trick: create element, set color, read computed style
+        try {
+          const d = document.createElement('div');
+          d.style.color = name;
+          d.style.display = 'none';
+          document.body.appendChild(d);
+          const cs = getComputedStyle(d).color;
+          document.body.removeChild(d);
+          return parseRGBAString(cs);
+        } catch(e){ return null; }
+      }
+
+      // parse stroke string like "3px solid rgba(79,70,229,1)" or "#RRGGBB" etc.
+      function parseStroke(str){
+        if(!str) return null;
+        str = String(str).trim();
+        // allow "none"
+        if(/^\s*none\s*$/i.test(str)) return { width:0, style:'none', color:{r:0,g:0,b:0,a:0} };
+        const re = /^\s*([0-9.]+)px\s+([a-z-]+)\s+(.+)$/i;
+        const m = str.match(re);
+        if(m){
+          const width = parseFloat(m[1]);
+          const style = m[2];
+          const colorPart = m[3].trim();
+          let color = parseRGBAString(colorPart) || hexToRgb(colorPart) || namedColorToRgb(colorPart);
+          if(!color && /^#/.test(colorPart)){
+            const h = hexToRgb(colorPart);
+            if(h) color = { r:h.r, g:h.g, b:h.b, a:1 };
+          }
+          if(!color){
+            // fallback: try parse as rgb via computed style
+            const named = namedColorToRgb(colorPart);
+            if(named) color = named;
+          }
+          if(!color) color = { r:0,g:0,b:0,a:1 };
+          if(typeof color.a === 'undefined') color.a = 1;
+          return { width, style, color };
+        }
+        // maybe the value is like "2px solid #abc" (handled above) or "solid 2px #abc" - try another order
+        const re2 = /^\s*([a-z-]+)\s+([0-9.]+)px\s+(.+)$/i;
+        const m2 = str.match(re2);
+        if(m2){
+          const style = m2[1], width = parseFloat(m2[2]), colorPart = m2[3].trim();
+          let color = parseRGBAString(colorPart) || hexToRgb(colorPart) || namedColorToRgb(colorPart) || { r:0,g:0,b:0,a:1 };
+          if(typeof color.a === 'undefined') color.a = 1;
+          return { width, style, color };
+        }
+        return null;
+      }
+
+      function rgbaString(c){ return `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${Number((c.a||1)).toFixed(2)})`; }
+      function strokeString(state){ return state.style === 'none' ? 'none' : `${state.width}px ${state.style} ${rgbaString(state.color)}`; }
+
+      // inspector proxy finder (closest .template-proxy within parent .prop-control or global)
+      function findProxy(){
+        let p = container;
+        while(p && !p.classList.contains('prop-control')) p = p.parentElement;
+        const proxy = (p && p.querySelector('.template-proxy')) || document.querySelector('.template-proxy');
+        return proxy;
+      }
+
+      // initial state (defaults)
+      const state = { width:3, style:'solid', color:{ r:79, g:70, b:229, a:1 } };
+
+      // set inspector proxy value
+      function setInspectorProxyValue(val){
+        const proxy = findProxy();
+        if(proxy){
+          proxy.value = String(val||'');
+          proxy.dispatchEvent(new Event('change', { bubbles:true }));
+        }
+      }
+
+      function updateOutputs(){
+        // chip + mini
+        if(chipFill) chipFill.style.background = rgbaString(state.color);
+        if(miniValue) miniValue.textContent = strokeString(state);
+
+        // reset preview
+        if(preview){
+          preview.style.border = 'none';
+          preview.style.outline = 'none';
+          preview.style.textDecoration = 'none';
+          preview.style.columnRule = 'initial';
+          preview.style.columnCount = 'initial';
+          preview.style.columnGap = 'initial';
+          preview.style.outlineOffset = '0';
+          preview.textContent = 'Sample';
+        }
+
+        const v = strokeString(state);
+        if(previewProp){
+          switch(previewProp.value){
+            case 'border':
+              preview.style.border = v;
+              break;
+            case 'outline':
+              preview.style.outline = v;
+              preview.style.outlineOffset = '4px';
+              break;
+            case 'column-rule':
+              preview.style.columnCount = 2;
+              preview.style.columnGap = '24px';
+              preview.style.columnRule = v;
+              preview.textContent = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
+              break;
+            case 'text-decoration':
+              preview.textContent = 'Text decoration sample';
+              preview.style.textDecoration = `${state.style} ${state.width}px`;
+              preview.style.textDecorationColor = rgbaString(state.color);
+              break;
+          }
+        }
+
+        if(out) out.textContent = v;
+        // notify inspector (live)
+        setInspectorProxyValue(v);
+      }
+
+      // seed initial values from nearest proxy.value (if inspector seeded it) or from container.dataset.value if provided
+      (function seedInitial(){
+        let seeded = false;
+        try {
+          const proxy = findProxy();
+          const candidate = proxy && String(proxy.value || '').trim();
+          if(candidate){
+            const parsed = parseStroke(candidate);
+            if(parsed){
+              state.width = Math.round(parsed.width || state.width);
+              state.style = parsed.style || state.style;
+              state.color = Object.assign({}, state.color, parsed.color || {});
+              seeded = true;
+            }
+          }
+        } catch(e){ /* ignore */ }
+
+        // fallback: container data-value (some inspectors may put initial value there)
+        if(!seeded){
+          const dv = (container.dataset && container.dataset.value) ? String(container.dataset.value).trim() : '';
+          if(dv){
+            const parsed = parseStroke(dv);
+            if(parsed){
+              state.width = Math.round(parsed.width || state.width);
+              state.style = parsed.style || state.style;
+              state.color = Object.assign({}, state.color, parsed.color || {});
+              seeded = true;
+            }
+          }
+        }
+
+        // ensure UI inputs reflect state
+        if(wNum) wNum.value = state.width;
+        if(wRange) wRange.value = state.width;
+        if(styleSel) styleSel.value = state.style;
+        if(colorInput) {
+          try { colorInput.value = rgbToHex(state.color.r, state.color.g, state.color.b); } catch(e){}
+        }
+        if(hexInput) hexInput.value = colorInput ? colorInput.value : rgbToHex(state.color.r, state.color.g, state.color.b);
+        if(alphaRange) alphaRange.value = (typeof state.color.a !== 'undefined' ? state.color.a : 1);
+
+        updateOutputs();
+      })();
+
+      // wire events
+      if(wNum) wNum.addEventListener('input', ()=>{ state.width = clamp(parseInt(wNum.value||0),0,128); if(wRange) wRange.value = state.width; updateOutputs(); });
+      if(wRange) wRange.addEventListener('input', ()=>{ state.width = clamp(parseInt(wRange.value||0),0,128); if(wNum) wNum.value = state.width; updateOutputs(); });
+      if(styleSel) styleSel.addEventListener('change', ()=>{ state.style = styleSel.value; updateOutputs(); });
+      if(colorInput) colorInput.addEventListener('input', ()=>{ const hex = colorInput.value.toUpperCase(); const rgb = hexToRgb(hex); if(!rgb) return; state.color.r = rgb.r; state.color.g = rgb.g; state.color.b = rgb.b; if(hexInput) hexInput.value = hex; updateOutputs(); });
+      if(hexInput) hexInput.addEventListener('change', ()=>{ const rgb = hexToRgb(hexInput.value); if(!rgb) {
+        // try named color
+        const named = namedColorToRgb(hexInput.value);
+        if(named){ state.color = named; if(colorInput) colorInput.value = rgbToHex(named.r,named.g,named.b); updateOutputs(); }
+        return;
+      } if(colorInput) colorInput.value = rgbToHex(rgb.r,rgb.g,rgb.b); state.color.r = rgb.r; state.color.g = rgb.g; state.color.b = rgb.b; updateOutputs(); });
+      if(alphaRange) alphaRange.addEventListener('input', ()=>{ state.color.a = parseFloat(alphaRange.value||1); updateOutputs(); });
+      if(previewProp) previewProp.addEventListener('change', updateOutputs);
+
+      if(applyBtn) applyBtn.addEventListener('click', ()=>{ // explicit apply (also already live)
+        const v = strokeString(state);
+        setInspectorProxyValue(v);
+        // visual feedback: flash code block
+        if(out){
+          out.style.transition = 'none';
+          out.style.background = '#113344';
+          setTimeout(()=> out.style.background = '', 180);
+        }
+      });
+
+      if(resetBtn) resetBtn.addEventListener('click', ()=>{
+        state.width = 0; state.style = 'none'; state.color = { r:0,g:0,b:0,a:0 };
+        if(wNum) wNum.value = 0; if(wRange) wRange.value = 0; if(styleSel) styleSel.value = 'none';
+        if(colorInput) colorInput.value = '#000000'; if(hexInput) hexInput.value = '#000000'; if(alphaRange) alphaRange.value = 0;
+        updateOutputs();
+      });
+
+      // expose for debug if needed
+      container._strokeEditorState = state;
+
+    })();
+  </script>
+</div>

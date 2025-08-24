@@ -1,4 +1,4 @@
-# Mini HTML Studio
+# Sobhan <KD/>
 
 A small, local Flask-based app for creating, editing and previewing HTML/CSS/JS projects.  
 It’s ideal for quick experiments, teaching, or building tiny static sites from a central interface.

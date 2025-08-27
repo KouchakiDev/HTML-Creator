@@ -4,29 +4,16 @@ A small, local Flask-based app for creating, editing, and previewing HTML/CSS/JS
 Ideal for quick experiments, teaching, or building tiny static sites from a single, central interface.
 
 **Author**
-- **Sobhan KD**  
-- **Sobhan Kouchaki — Developer**
+- **Sobhan Kouchaki — SKD**
 
 ---
 
 ## Table of Contents
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Menu & Project workflow](#menu--project-workflow)
-- [Project Structure](#project-structure)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Running locally](#running-locally)
-- [Using the app](#using-the-app)
-- [Development](#development)
-- [Packaging & Deployment](#packaging--deployment)
-- [Publishing to GitHub](#publishing-to-github)
-- [Recommended `.gitignore`](#recommended-gitignore)
-- [Security & Privacy](#security--privacy)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
-- [Troubleshooting](#troubleshooting)
+- [Html creatore](#html-creatore)
+  - [Table of Contents](#table-of-contents)
+  - [Project Overview](#project-overview)
+  - [Features](#features)
+  - [Menu \& Project workflow](#menu--project-workflow)
 
 ---
 
@@ -80,4 +67,4 @@ Typical workflow:
 
 ---
 
-## Project Structure (example)
+if you can make it better i happy to see your version
